@@ -1,6 +1,0 @@
-<body_fl_ang>
-Old similarity: 100
-Euclidean similarity: 3.827468773826638
-Pearson Correlation similarity: 78.25167924547681
-DTW similarity: 0
-similarity: 62.60134339638145

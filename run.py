@@ -364,14 +364,17 @@ def evaluate_body_fl_ang(s1_walk_kp, s2_walk_kp, s1_video_fps, s2_video_fps):
 
     print("Body Foward Lean Angle >>>>>")
 
-    ## Configuring a Vector that points out from the floor.
+    # ## Configuring a Vector that points out from the floor.
 
-    vz, vx, vy = 1, 0, 0
+    # vz, vx, vy = 1, 0, 0
 
-    ## Calculate Subject Body Foward Lean Angle
+    # ## Calculate Subject Body Foward Lean Angle
 
-    s1_body_fl_ang = np.array([calculateAngle(f[h36m_skeleton["throat"]], f[h36m_skeleton["hip"]], f[h36m_skeleton["hip"]] + (vx, vy, vz)) for f in s1_walk_kp])
-    s2_body_fl_ang = np.array([calculateAngle(f[h36m_skeleton["throat"]], f[h36m_skeleton["hip"]], f[h36m_skeleton["hip"]] + (vx, vy, vz)) for f in s2_walk_kp])
+    # s1_body_fl_ang = np.array([calculateAngle(f[h36m_skeleton["throat"]], f[h36m_skeleton["hip"]], f[h36m_skeleton["hip"]] + (vx, vy, vz)) for f in s1_walk_kp])
+    # s2_body_fl_ang = np.array([calculateAngle(f[h36m_skeleton["throat"]], f[h36m_skeleton["hip"]], f[h36m_skeleton["hip"]] + (vx, vy, vz)) for f in s2_walk_kp])
+
+    s1_body_fl_ang = np.array([calculateAngle(f[h36m_skeleton["throat"]], f[h36m_skeleton["spine"]], f[h36m_skeleton["hip"]]) for f in s1_walk_kp])
+    s2_body_fl_ang = np.array([calculateAngle(f[h36m_skeleton["throat"]], f[h36m_skeleton["spine"]], f[h36m_skeleton["hip"]]) for f in s2_walk_kp])
     
     s1_time = [(i / s1_video_fps) for i in range(len(s1_walk_kp))]
     s2_time = [(i / s2_video_fps) for i in range(len(s2_walk_kp))]   
