@@ -3,4 +3,4 @@ Old similarity: 100
 Euclidean similarity: 16.03603493094677
 Pearson Correlation similarity: 0
 DTW similarity: 27.397308930118882
-similarity: 13.698654465059441
+similarity: 27.397308930118882

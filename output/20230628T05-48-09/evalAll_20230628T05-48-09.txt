@@ -1,0 +1,4 @@
+1-V2-side & 63-V2-side
+arm_wave_ang_similarity: 85.53731480441384
+step_length_similarity: 0
+body_fl_ang_similarity: 0
