@@ -1,0 +1,4 @@
+1-V2-side & 8-V2-side
+arm_wave_ang_similarity: 64.79159921255798
+step_length_similarity: 21.872431753524758
+body_fl_ang_similarity: 0.0
