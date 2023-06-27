@@ -118,7 +118,7 @@ if __name__ == "__main__":
         bpy.ops.mesh.primitive_cube_add(size=0.3, location=loc)
         
     
-    ## Create new connector mesh and mesh object and link to scene
+    ## Create new connector mesh and mesh object and link to scene (https://blender.stackexchange.com/questions/137237/how-do-i-add-a-cylinder-between-two-moving-objects)
     
     for i in range(len(connections)):
         
