@@ -219,7 +219,7 @@ def pearsonCorr_similarity_function(feature_name, s1_time, s2_time, s1_feature, 
 
     # print(f"Subject_Correlation: {subject_corr}")
 
-    return max(subject_corr, 0) * 100
+    return min(max(subject_corr, 0) * 100, 100)
 
 
 def dtw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
@@ -280,18 +280,26 @@ def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
     pearsonCorr_similarity = pearsonCorr_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
     dtw_similarity = dtw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
 
-    if 60 < pearsonCorr_similarity < 80 and 50 < dtw_similarity < 80:
-        similarity = 0.6 * pearsonCorr_similarity + 0.4 * dtw_similarity + 10
+    if pearsonCorr_similarity == 100 and dtw_similarity == 100:
+        similarity = 100
+    elif pearsonCorr_similarity == 100 and dtw_similarity != 100:
+        similarity = pearsonCorr_similarity - 0.2 * dtw_similarity
+    elif pearsonCorr_similarity != 100 and dtw_similarity == 100:
+        similarity = dtw_similarity - 0.2 * pearsonCorr_similarity
+    elif 60 < pearsonCorr_similarity < 80 and 50 < dtw_similarity < 70:
+        similarity = 0.6 * pearsonCorr_similarity + 0.4 * dtw_similarity + 15
     elif 60 < pearsonCorr_similarity < 80 and dtw_similarity < 50:
+        similarity = 0.9 * pearsonCorr_similarity + 0.1 * dtw_similarity + 15
+    elif 60 < pearsonCorr_similarity < 80 and 70 < dtw_similarity:
+        similarity = 0.1 * pearsonCorr_similarity + 0.9 * dtw_similarity + 10
+    elif pearsonCorr_similarity < 60 and 50 < dtw_similarity < 70:
+        similarity = 0.4 * pearsonCorr_similarity + 0.6 * dtw_similarity + 25
+    elif 80 < pearsonCorr_similarity and 50 < dtw_similarity < 70:
         similarity = 0.9 * pearsonCorr_similarity + 0.1 * dtw_similarity + 10
-    elif 60 < pearsonCorr_similarity < 80 and 80 < dtw_similarity:
-        similarity = dtw_similarity + 10
-    elif pearsonCorr_similarity < 60 and 50 < dtw_similarity < 80:
-        similarity = 0.4 * pearsonCorr_similarity + 0.6 * dtw_similarity + 15
-    elif 80 < pearsonCorr_similarity and 50 < dtw_similarity < 80:
-        similarity = pearsonCorr_similarity + 10
     else:
         similarity = max(pearsonCorr_similarity, dtw_similarity)
+
+    similarity = min(similarity, 100)
     
     print("Old similarity: ", old_similarity)
     print('Euclidean similarity:', euclidean_similarity)
@@ -308,7 +316,7 @@ def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
         f.writelines(f'DTW similarity: {dtw_similarity}\n')
         f.writelines(f'similarity: {similarity}\n')
 
-    return min(similarity, 100)
+    return similarity
 
 
 def evaluate_arm_wave_ang(s1_walk_kp, s2_walk_kp, s1_video_fps, s2_video_fps):
