@@ -1,0 +1,6 @@
+<body_fl_ang>
+Euclidean similarity: 0
+Pearson Correlation similarity: 10.272330958350521
+DTW similarity: 0
+CTW similarity: 0
+Proposed similarity: 10.272330958350521

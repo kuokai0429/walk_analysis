@@ -1,0 +1,6 @@
+<step_length>
+Euclidean similarity: 8.301202055055711
+Pearson Correlation similarity: 0
+DTW similarity: 50.92288093310488
+CTW similarity: 49.942832905801204
+Proposed similarity: 55.553728559862925

@@ -18,6 +18,7 @@ import pandas as pd
 from tqdm import tqdm
 import math
 from dtw import *
+from tslearn.metrics import dtw_path, ctw_path, ctw
 from scipy.interpolate import CubicSpline
 from sklearn.preprocessing import MinMaxScaler
 
@@ -121,6 +122,8 @@ def get_curves(s1_time, s2_time, s1_feature, s2_feature):
 
 def plot_subject_seperate(feature_name, xlabel, ylabel, s1_time, s2_time, s1_feature, s2_feature):
 
+    s2_label = args.subject1 if args.mode == "benchmark" else args.subject2
+
     f = plt.figure()
     plt.xlim([min(min(s1_time), min(s2_time)), max(max(s1_time), max(s2_time))])
     plt.ylim([min(min(s1_feature), min(s2_feature)), max(max(s1_feature), max(s2_feature))])
@@ -138,7 +141,7 @@ def plot_subject_seperate(feature_name, xlabel, ylabel, s1_time, s2_time, s1_fea
     f = plt.figure()
     plt.xlim([min(min(s1_time), min(s2_time)), max(max(s1_time), max(s2_time))])
     plt.ylim([min(min(s1_feature), min(s2_feature)), max(max(s1_feature), max(s2_feature))])
-    plt.plot(s2_time, s2_feature, label=args.subject2)
+    plt.plot(s2_time, s2_feature, label=s2_label)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
@@ -154,11 +157,13 @@ def plot_subject_seperate(feature_name, xlabel, ylabel, s1_time, s2_time, s1_fea
 
 def plot_subject_concatenate(feature_name, xlabel, ylabel, s1_time, s2_time, s1_feature, s2_feature):
 
+    s2_label = args.subject1 if args.mode == "benchmark" else args.subject2
+
     ## Plot Subjects together without 1d-rescale
     
     # f = plt.figure()
     # plt.plot(s1_time, s1_feature, label=args.subject1)
-    # plt.plot(s2_time, s2_feature, label=args.subject2)
+    # plt.plot(s2_time, s2_feature, label=s2_label)
     # plt.xlabel(xlabel)
     # plt.ylabel(ylabel)
     # plt.legend()
@@ -175,15 +180,62 @@ def plot_subject_concatenate(feature_name, xlabel, ylabel, s1_time, s2_time, s1_
 
     f = plt.figure()
     plt.plot(factor_s1 * s1_x_curve(s1_xlim), s1_y_curve(s1_xlim), label=args.subject1)
-    plt.plot(factor_s2 * s2_x_curve(s2_xlim), s2_y_curve(s2_xlim), label=args.subject2)
+    plt.plot(factor_s2 * s2_x_curve(s2_xlim), s2_y_curve(s2_xlim), label=s2_label)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
     # plt.show()
 
-    f.savefig(f"./output/{TIMESTAMP}/{feature_name}_{TIMESTAMP[:-1]}")
+    f.savefig(f"./output/{TIMESTAMP[:-1]}/{feature_name}_{TIMESTAMP[:-1]}")
 
     plt.close(f)
+
+
+def plot_trajectory(ts, v, ax, color, alpha=1.):
+      
+    colors = plt.cm.jet(color)
+    for i in range(len(ts) - 1):
+        ax.plot(ts[i:i+2], v[i:i+2], c=colors, alpha=alpha)
+        
+        
+def plot_ctw(s1, s2, path_ctw, feature_name, mode):
+
+    fig, ax = plt.subplots()
+
+    for (i, j) in path_ctw:
+        ax.plot([np.arange(0, 1000)[i], np.arange(0, 1000)[j]],
+                [s1[i], s2[j]],
+                color='g' if i == j else 'r', alpha=.1)
+    plot_trajectory(np.arange(0, 1000), s1, ax, 0)
+    plot_trajectory(np.arange(0, 1000), s2, ax, 500)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title(f"CTW_{mode}")
+    plt.tight_layout()
+    # plt.show()
+
+    fig.savefig(f"./output/{TIMESTAMP[:-1]}/{feature_name}_{mode}_ctw_{TIMESTAMP[:-1]}")
+
+    plt.close(fig)
+
+
+def meanStd_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
+
+    mean_standard, mean_learner = np.mean(s1_feature), np.mean(s2_feature)
+    std_standard, std_learner  = np.std(s1_feature, ddof=0), np.std(s2_feature, ddof=1)
+
+    if mean_learner < 160:
+        mean = max((1 - (abs(mean_learner-mean_standard) / 180)) * 30, 0)
+        std  = max((1 - (abs(std_learner-std_standard) / std_standard)) * 0, 0)
+        bonus = 70
+    else:
+        mean = max((1 - (abs(mean_learner-mean_standard) / 180)) * 20, 0)
+        std  = min(max((1 - (abs(std_learner-std_standard) / std_standard)) * 80, 0), 50)
+        bonus = 0
+        
+    similarity = int(round(mean + std + bonus))
+
+    return similarity
 
 
 def euclidean_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
@@ -233,9 +285,9 @@ def dtw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_featu
     s1, s2, s_max = s1_y_curve(np.linspace(0, len(s1_time), 1000)), s2_y_curve(np.linspace(0, len(s2_time), 1000)), np.random.uniform(min_y, max_y, size=1000).reshape(-1, 1)
 
     alignment_threeway = dtw(s1, s2, keep_internals=True)    
-    alignment_twoway = dtw(s1, s2, keep_internals=True, step_pattern=rabinerJuangStepPattern(6, "c"))
+    alignment_twoway = dtw(s1, s2, keep_internals=True, open_begin=True, open_end=True, step_pattern=rabinerJuangStepPattern(6, "c"))
     alignment_threeway.plot(type="threeway")
-    alignment_twoway.plot(type="twoway",offset=-2).figure.savefig(f"./output/{TIMESTAMP}/{feature_name}_similarity_{TIMESTAMP[:-1]}")
+    alignment_twoway.plot(type="twoway",offset=-2).figure.savefig(f"./output/{TIMESTAMP[:-1]}/{feature_name}_dtw_{TIMESTAMP[:-1]}")
     # plt.show()
     
     subject_distance, min_distance, max_distance = alignment_twoway.distance, 0, dtw(s1, s_max, keep_internals=True, step_pattern=rabinerJuangStepPattern(6, "c")).distance
@@ -247,21 +299,28 @@ def dtw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_featu
     return similarity
 
 
-def meanStd_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
+def ctw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
+    '''
+    Canonical Time Warping is a method to align time series under rigid registration 
+    of the feature space. It should not be confused with Dynamic Time Warping (DTW), though CTW uses DTW.
+    https://tslearn.readthedocs.io/en/stable/gen_modules/metrics/tslearn.metrics.ctw.html
+    '''
 
-    mean_standard, mean_learner = np.mean(s1_feature), np.mean(s2_feature)
-    std_standard, std_learner  = np.std(s1_feature, ddof=0), np.std(s2_feature, ddof=1)
+    s1_x_curve, s1_y_curve, s1_xlim, s2_x_curve, s2_y_curve, s2_xlim, max_x, min_x, max_y, min_y = get_curves(s1_time, s2_time, s1_feature, s2_feature)
+    s1, s2, s_max = s1_y_curve(np.linspace(0, len(s1_time), 1000)), s2_y_curve(np.linspace(0, len(s2_time), 1000)), np.random.uniform(min_y, max_y, size=1000).reshape(-1, 1)
 
-    if mean_learner < 160:
-        mean = max((1 - (abs(mean_learner-mean_standard) / 180)) * 30, 0)
-        std  = max((1 - (abs(std_learner-std_standard) / std_standard)) * 0, 0)
-        bonus = 70
-    else:
-        mean = max((1 - (abs(mean_learner-mean_standard) / 180)) * 20, 0)
-        std  = min(max((1 - (abs(std_learner-std_standard) / std_standard)) * 80, 0), 50)
-        bonus = 0
-        
-    similarity = int(round(mean + std + bonus))
+    path_ctw, cca, subject_distance = ctw_path(s1, s2, max_iter=100, n_components=1)
+    plot_ctw(s1, s2, path_ctw, feature_name, "subject")
+    # print(subject_distance)
+
+    path_ctw, cca, max_distance = ctw_path(s1, s_max, max_iter=100, n_components=1)
+    # plot_ctw(s1, s_max, path_ctw, feature_name, "max")
+    # print(max_distance)
+    
+    similarity = (subject_distance / (max_distance - 0)) * 100
+    similarity = min(max((100 - similarity), 0), 100)
+
+    print(f"<CTW> Subject_distance: {subject_distance}, Max_distance: {max_distance}, Min_distance: {0}")
 
     return similarity
 
@@ -279,12 +338,13 @@ def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
     euclidean_similarity = euclidean_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
     pearsonCorr_similarity = pearsonCorr_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
     dtw_similarity = dtw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
+    ctw_similarity = ctw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
 
-    if pearsonCorr_similarity == 100 and dtw_similarity == 100:
+    if 99 <= pearsonCorr_similarity and 99 <= dtw_similarity:
         similarity = 100
-    elif pearsonCorr_similarity == 100 and dtw_similarity != 100:
+    elif 99 <= pearsonCorr_similarity and dtw_similarity < 99:
         similarity = pearsonCorr_similarity - 0.2 * dtw_similarity
-    elif pearsonCorr_similarity != 100 and dtw_similarity == 100:
+    elif pearsonCorr_similarity < 99 and 99 <= dtw_similarity:
         similarity = dtw_similarity - 0.2 * pearsonCorr_similarity
     elif 60 < pearsonCorr_similarity < 80 and 50 < dtw_similarity < 70:
         similarity = 0.6 * pearsonCorr_similarity + 0.4 * dtw_similarity + 15
@@ -301,20 +361,20 @@ def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
 
     similarity = min(similarity, 100)
     
-    print("Old similarity: ", old_similarity)
     print('Euclidean similarity:', euclidean_similarity)
     print('Pearson Correlation similarity', pearsonCorr_similarity)
     print('DTW similarity:', dtw_similarity)
-    print('similarity:', similarity, end="\n\n")
+    print('CTW similarity:', ctw_similarity)
+    print('Proposed similarity:', similarity, end="\n\n")
 
     with open(f'output/{TIMESTAMP}/{feature_name}_eval_{TIMESTAMP[:-1]}.txt', 'w') as f:
         
         f.writelines(f'<{feature_name}>\n')
-        f.writelines(f'Old similarity: {old_similarity}\n')
         f.writelines(f'Euclidean similarity: {euclidean_similarity}\n')
         f.writelines(f'Pearson Correlation similarity: {pearsonCorr_similarity}\n')
         f.writelines(f'DTW similarity: {dtw_similarity}\n')
-        f.writelines(f'similarity: {similarity}\n')
+        f.writelines(f'CTW similarity: {ctw_similarity}\n')
+        f.writelines(f'Proposed similarity: {similarity}\n')
 
     return similarity
 
