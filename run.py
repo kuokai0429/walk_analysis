@@ -327,18 +327,35 @@ def ctw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_featu
 
 def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
 
+    # Rescale the time series with MinMaxScaler() and align y-axis
     scaler = MinMaxScaler()
     scaler.fit(np.concatenate((s1_feature, s2_feature), axis=0).reshape(-1, 1))
     s1_feature_scaled = scaler.transform(s1_feature.reshape(-1, 1))
     s2_feature_scaled = scaler.transform(s2_feature.reshape(-1, 1))
-    s1_feature, s2_feature = s1_feature_scaled, s2_feature_scaled
+    s_mean = (np.mean(s1_feature_scaled) + np.mean(s2_feature_scaled)) / 2
+    s1_diff, s2_diff = abs(np.mean(s1_feature_scaled) - s_mean), abs(np.mean(s2_feature_scaled) - s_mean)
+    s1_feature = [[i[0] - s1_diff] for i in s1_feature_scaled] if np.mean(s1_feature_scaled) > s_mean else [[i[0] + s1_diff] for i in s1_feature_scaled]
+    s2_feature = [[i[0] - s2_diff] for i in s2_feature_scaled] if np.mean(s2_feature_scaled) > s_mean else [[i[0] + s2_diff] for i in s2_feature_scaled]
+    # s1_feature, s2_feature = s1_feature_scaled, s2_feature_scaled
     print(s1_feature_scaled.shape, s2_feature_scaled.shape)
 
+    # Rescale the time series with StandardScaler()
+    # scaler = StandardScaler()
+    # scaler.fit(s1_feature.reshape(-1, 1))
+    # s1_feature_scaled = scaler.transform(s1_feature.reshape(-1, 1))
+    # scaler = StandardScaler()
+    # scaler.fit(s2_feature.reshape(-1, 1))
+    # s2_feature_scaled = scaler.transform(s2_feature.reshape(-1, 1))
+    # s1_feature, s2_feature = s1_feature_scaled, s2_feature_scaled
+    # print(s1_feature_scaled.shape, s2_feature_scaled.shape)
+
+    # Evaluate the Similarity of two subjects.
     old_similarity = meanStd_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
     euclidean_similarity = euclidean_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
     pearsonCorr_similarity = pearsonCorr_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
+    # ctw_similarity = ctw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
+    # lcss_similarity = lcss_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
     dtw_similarity = dtw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
-    ctw_similarity = ctw_similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature)
 
     if 99 <= pearsonCorr_similarity and 99 <= dtw_similarity:
         similarity = 100
@@ -364,8 +381,9 @@ def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
     print('Euclidean similarity:', euclidean_similarity)
     print('Pearson Correlation similarity', pearsonCorr_similarity)
     print('DTW similarity:', dtw_similarity)
-    print('CTW similarity:', ctw_similarity)
-    print('Proposed similarity:', similarity, end="\n\n")
+    # print('CTW similarity:', ctw_similarity)
+    # print('LCSS similarity:', lcss_similarity)
+    print('DTW + Corr similarity:', similarity, end="\n\n")
 
     with open(f'output/{TIMESTAMP}/{feature_name}_eval_{TIMESTAMP[:-1]}.txt', 'w') as f:
         
@@ -373,8 +391,9 @@ def similarity_function(feature_name, s1_time, s2_time, s1_feature, s2_feature):
         f.writelines(f'Euclidean similarity: {euclidean_similarity}\n')
         f.writelines(f'Pearson Correlation similarity: {pearsonCorr_similarity}\n')
         f.writelines(f'DTW similarity: {dtw_similarity}\n')
-        f.writelines(f'CTW similarity: {ctw_similarity}\n')
-        f.writelines(f'Proposed similarity: {similarity}\n')
+        # f.writelines(f'CTW similarity: {ctw_similarity}\n')
+        # f.writelines(f'LCSS similarity: {lcss_similarity}\n')
+        f.writelines(f'DTW + Corr similarity: {similarity}\n')
 
     return similarity
 

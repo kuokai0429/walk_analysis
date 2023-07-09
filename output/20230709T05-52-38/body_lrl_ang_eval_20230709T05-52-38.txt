@@ -1,0 +1,5 @@
+<body_lrl_ang>
+Euclidean similarity: 6.531655984080999
+Pearson Correlation similarity: 0
+DTW similarity: 36.379364544814926
+DTW + Corr similarity: 36.379364544814926
