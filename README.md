@@ -4,9 +4,9 @@ We introduce a novel method for walk pose trajectory analysis..
 
 ## 三維姿態估測推論 3D Pose Extimation Inference
 
-> --out_video_sf : Start frame of input video.
-> --out_video_dl : Output video length.
-> --pose3d_rotation : z_rotate y_rotate x_rotate
+--out_video_sf : Start frame of input video. 
+--out_video_dl : Output video length.
+--pose3d_rotation : z_rotate y_rotate x_rotate
 
 ```bash
 python common/pose3d/vis_longframes.py --video 1-V2-front.mp4 --out_video_sf 0 --out_video_dl 1000 --pose3d_rotation 0 0 0
