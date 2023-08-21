@@ -2,7 +2,7 @@
 
 We introduce a novel method for walk pose trajectory analysis..
 
-## 三維姿態估測推論 3D Pose Extimation Inference
+## 三維姿態估測推論 3D Pose Estimation Inference
 
 - **out_video_sf** : Start frame of input video. <br>
 - **out_video_dl** : Output video length. <br>
