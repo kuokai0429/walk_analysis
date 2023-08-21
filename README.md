@@ -22,4 +22,3 @@ python common/pose3d/vis_longframes.py --video 1-V2-front.mp4 --out_video_sf 0 -
 python run.py --subject1 1-V2-side --subject2 8-V2-side --mode side
 ( python run.py --subject1 1-V2-front --subject2 8-V2-front --mode front )
 ```
-
